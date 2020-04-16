@@ -23,6 +23,7 @@ package influxdb
 import (
 	"context"
 	"errors"
+	"strconv"
 	"sync"
 	"time"
 
@@ -133,8 +134,39 @@ func (c *Collector) commit() {
 }
 
 func (c *Collector) extractTagsToValues(tags map[string]string, values map[string]interface{}) map[string]interface{} {
+tags:
 	for _, tag := range c.Config.TagsAsFields {
 		if val, ok := tags[tag]; ok {
+			for _, t := range c.Config.IntFields {
+				if tag == t {
+					i, err := strconv.ParseInt(val, 10, 64)
+					if err == nil {
+						values[tag] = i
+						delete(tags, tag)
+						continue tags
+					}
+				}
+			}
+			for _, t := range c.Config.FloatFields {
+				if tag == t {
+					f, err := strconv.ParseFloat(val, 64)
+					if err == nil {
+						values[tag] = f
+						delete(tags, tag)
+						continue tags
+					}
+				}
+			}
+			for _, t := range c.Config.BoolFields {
+				if tag == t {
+					b, err := strconv.ParseBool(val)
+					if err == nil {
+						values[tag] = b
+						delete(tags, tag)
+						continue tags
+					}
+				}
+			}
 			values[tag] = val
 			delete(tags, tag)
 		}
