@@ -23,6 +23,8 @@ package influxdb
 import (
 	"strings"
 
+	"github.com/sirupsen/logrus"
+
 	client "github.com/influxdata/influxdb1-client/v2"
 	"gopkg.in/guregu/null.v3"
 )
@@ -56,4 +58,29 @@ func MakeBatchConfig(conf Config) client.BatchPointsConfig {
 		RetentionPolicy:  conf.Retention.String,
 		WriteConsistency: conf.Consistency.String,
 	}
+}
+
+func CheckDuplicatedTypeDefinitions(fieldKinds map[string]fieldKind, tag string) {
+	if _, found := fieldKinds[tag]; found {
+		logrus.WithFields(logrus.Fields{
+			"tagName": tag,
+		}).Warn("A tag name shows up more than once in InfluxDB field type configurations.")
+	}
+}
+
+func MakeFieldKinds(conf Config) map[string]fieldKind {
+	fieldKinds := make(map[string]fieldKind)
+	for _, tag := range conf.BoolFields {
+		CheckDuplicatedTypeDefinitions(fieldKinds, tag)
+		fieldKinds[tag] = Bool
+	}
+	for _, tag := range conf.FloatFields {
+		CheckDuplicatedTypeDefinitions(fieldKinds, tag)
+		fieldKinds[tag] = Float
+	}
+	for _, tag := range conf.IntFields {
+		CheckDuplicatedTypeDefinitions(fieldKinds, tag)
+		fieldKinds[tag] = Int
+	}
+	return fieldKinds
 }

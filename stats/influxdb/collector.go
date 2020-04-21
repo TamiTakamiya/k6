@@ -34,6 +34,15 @@ import (
 	"github.com/loadimpact/k6/stats"
 )
 
+// Enum definition for tag-to-field type conversion
+type fieldKind int
+
+const (
+	Int fieldKind = iota
+	Float
+	Bool
+)
+
 // Verify that Collector implements lib.Collector
 var _ lib.Collector = &Collector{}
 
@@ -46,6 +55,7 @@ type Collector struct {
 	bufferLock  sync.Mutex
 	wg          sync.WaitGroup
 	semaphoreCh chan struct{}
+	fieldKinds  map[string]fieldKind
 }
 
 func New(conf Config) (*Collector, error) {
@@ -62,6 +72,7 @@ func New(conf Config) (*Collector, error) {
 		Config:      conf,
 		BatchConf:   batchConf,
 		semaphoreCh: make(chan struct{}, conf.ConcurrentWrites.Int64),
+		fieldKinds:  MakeFieldKinds(conf),
 	}, nil
 }
 
@@ -137,34 +148,21 @@ func (c *Collector) extractTagsToValues(tags map[string]string, values map[strin
 tags:
 	for _, tag := range c.Config.TagsAsFields {
 		if val, ok := tags[tag]; ok {
-			for _, t := range c.Config.IntFields {
-				if tag == t {
-					i, err := strconv.ParseInt(val, 10, 64)
-					if err == nil {
-						values[tag] = i
-						delete(tags, tag)
-						continue tags
-					}
+			if kind, convNeeded := c.fieldKinds[tag]; convNeeded {
+				var v interface{}
+				var err error
+				switch kind {
+				case Bool:
+					v, err = strconv.ParseBool(val)
+				case Float:
+					v, err = strconv.ParseFloat(val, 64)
+				case Int:
+					v, err = strconv.ParseInt(val, 10, 64)
 				}
-			}
-			for _, t := range c.Config.FloatFields {
-				if tag == t {
-					f, err := strconv.ParseFloat(val, 64)
-					if err == nil {
-						values[tag] = f
-						delete(tags, tag)
-						continue tags
-					}
-				}
-			}
-			for _, t := range c.Config.BoolFields {
-				if tag == t {
-					b, err := strconv.ParseBool(val)
-					if err == nil {
-						values[tag] = b
-						delete(tags, tag)
-						continue tags
-					}
+				if err == nil {
+					values[tag] = v
+					delete(tags, tag)
+					continue tags
 				}
 			}
 			values[tag] = val
