@@ -57,3 +57,18 @@ func MakeBatchConfig(conf Config) client.BatchPointsConfig {
 		WriteConsistency: conf.Consistency.String,
 	}
 }
+
+func MakeFieldKinds(conf Config) map[string]fieldKind {
+	fieldKinds := make(map[string]fieldKind)
+	for _, tag := range conf.BoolFields {
+		fieldKinds[tag] = Bool
+	}
+	for _, tag := range conf.FloatFields {
+		fieldKinds[tag] = Float
+	}
+	for _, tag := range conf.IntFields {
+		fieldKinds[tag] = Int
+	}
+
+	return fieldKinds
+}
