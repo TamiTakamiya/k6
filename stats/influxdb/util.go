@@ -84,3 +84,11 @@ func MakeFieldKinds(conf Config) map[string]fieldKind {
 	}
 	return fieldKinds
 }
+
+func MakeMetricsSuppressed(conf Config) map[string]bool {
+	metricsSuppressed := make(map[string]bool)
+	for _, metric:= range conf.MetricsSuppressed {
+		metricsSuppressed[metric] = true
+	}
+	return metricsSuppressed
+}
