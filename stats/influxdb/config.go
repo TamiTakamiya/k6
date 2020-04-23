@@ -45,14 +45,15 @@ type Config struct {
 	ConcurrentWrites null.Int           `json:"concurrentWrites,omitempty" envconfig:"K6_INFLUXDB_CONCURRENT_WRITES"`
 
 	// Samples.
-	DB           null.String `json:"db" envconfig:"K6_INFLUXDB_DB"`
-	Precision    null.String `json:"precision,omitempty" envconfig:"K6_INFLUXDB_PRECISION"`
-	Retention    null.String `json:"retention,omitempty" envconfig:"K6_INFLUXDB_RETENTION"`
-	Consistency  null.String `json:"consistency,omitempty" envconfig:"K6_INFLUXDB_CONSISTENCY"`
-	TagsAsFields []string    `json:"tagsAsFields,omitempty" envconfig:"K6_INFLUXDB_TAGS_AS_FIELDS"`
-	BoolFields   []string    `json:"boolFields,omitempty" envconfig:"K6_INFLUXDB_BOOL_FIELDS"`
-	FloatFields  []string    `json:"floatFields,omitempty" envconfig:"K6_INFLUXDB_FLOAT_FIELDS"`
-	IntFields    []string    `json:"intFields,omitempty" envconfig:"K6_INFLUXDB_INT_FIELDS"`
+	DB           	  null.String `json:"db" envconfig:"K6_INFLUXDB_DB"`
+	Precision    	  null.String `json:"precision,omitempty" envconfig:"K6_INFLUXDB_PRECISION"`
+	Retention    	  null.String `json:"retention,omitempty" envconfig:"K6_INFLUXDB_RETENTION"`
+	Consistency  	  null.String `json:"consistency,omitempty" envconfig:"K6_INFLUXDB_CONSISTENCY"`
+	TagsAsFields 	  []string    `json:"tagsAsFields,omitempty" envconfig:"K6_INFLUXDB_TAGS_AS_FIELDS"`
+	BoolFields   	  []string    `json:"boolFields,omitempty" envconfig:"K6_INFLUXDB_BOOL_FIELDS"`
+	FloatFields  	  []string    `json:"floatFields,omitempty" envconfig:"K6_INFLUXDB_FLOAT_FIELDS"`
+	IntFields    	  []string    `json:"intFields,omitempty" envconfig:"K6_INFLUXDB_INT_FIELDS"`
+	MetricsSuppressed []string    `json:"intFields,omitempty" envconfig:"K6_INFLUXDB_METRICS_SUPPRESSED"`
 }
 
 func NewConfig() *Config {

@@ -47,15 +47,16 @@ const (
 var _ lib.Collector = &Collector{}
 
 type Collector struct {
-	Client    client.Client
-	Config    Config
-	BatchConf client.BatchPointsConfig
+	Client            client.Client
+	Config            Config
+	BatchConf         client.BatchPointsConfig
 
-	buffer      []stats.Sample
-	bufferLock  sync.Mutex
-	wg          sync.WaitGroup
-	semaphoreCh chan struct{}
-	fieldKinds  map[string]fieldKind
+	buffer            []stats.Sample
+	bufferLock        sync.Mutex
+	wg                sync.WaitGroup
+	semaphoreCh       chan struct{}
+	fieldKinds        map[string]fieldKind
+	metricsSuppressed map[string]bool
 }
 
 func New(conf Config) (*Collector, error) {
@@ -68,11 +69,12 @@ func New(conf Config) (*Collector, error) {
 		return nil, errors.New("influxdb's ConcurrentWrites must be a positive number")
 	}
 	return &Collector{
-		Client:      cl,
-		Config:      conf,
-		BatchConf:   batchConf,
-		semaphoreCh: make(chan struct{}, conf.ConcurrentWrites.Int64),
-		fieldKinds:  MakeFieldKinds(conf),
+		Client:            cl,
+		Config:            conf,
+		BatchConf:         batchConf,
+		semaphoreCh:       make(chan struct{}, conf.ConcurrentWrites.Int64),
+		fieldKinds:        MakeFieldKinds(conf),
+		metricsSuppressed: MakeMetricsSuppressed(conf),
 	}, nil
 }
 
@@ -185,6 +187,9 @@ func (c *Collector) batchFromSamples(samples []stats.Sample) (client.BatchPoints
 	}
 	cache := map[*stats.SampleTags]cacheItem{}
 	for _, sample := range samples {
+		if _, found := c.metricsSuppressed[sample.Metric.Name]; found {
+			continue
+		}
 		var tags map[string]string
 		var values = make(map[string]interface{})
 		if cached, ok := cache[sample.Tags]; ok {
