@@ -43,6 +43,15 @@ const (
 	Bool
 )
 
+// Enum definition for tag-to-field type conversion
+type fieldKind int
+
+const (
+	Int fieldKind = iota
+	Float
+	Bool
+)
+
 // Verify that Collector implements lib.Collector
 var _ lib.Collector = &Collector{}
 
